@@ -1,7 +1,19 @@
 #!/bin/bash
 
-# Upgrade system packages
+# Update and upgrade system packages
 sudo apt update && sudo apt upgrade -y
+
+# Install Zenity for graphical dialog boxes
+sudo apt-get install zenity -y
+
+# Prompt for the public hostname
+PUBLIC_HOSTNAME=$(zenity --entry --title="Enter Public Hostname" --text="Please enter your public hostname:")
+
+# Check if the user clicked cancel or if the input is empty
+if [ $? -ne 0 ] || [ -z "$PUBLIC_HOSTNAME" ]; then
+    zenity --error --text="No hostname entered. Exiting script."
+    exit 1
+fi
 
 # Install Java
 sudo apt install openjdk-11-jdk -y
@@ -9,10 +21,8 @@ sudo apt install openjdk-11-jdk -y
 # Install Apache HTTP
 sudo apt install apache2 -y
 
-# (You might need to add Jenkins source URL and keys here before installing Jenkins)
-
 # Install Jenkins
-sudo apt-get install jenkins
+sudo apt-get install jenkins -y
 
 # Setup SSL
 sudo mkdir -p /etc/apache2/ssl
@@ -23,11 +33,12 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ss
 # Setup Apache
 sudo bash -c 'cat > /etc/apache2/sites-available/000-default.conf << EOF
 <VirtualHost *:80>
-   ServerName localhost
-   Redirect / https://localhost/
+   ServerName $PUBLIC_HOSTNAME
+   Redirect / https://$PUBLIC_HOSTNAME/
 </VirtualHost>
 
 <VirtualHost *:443>
+   ServerName $PUBLIC_HOSTNAME
    SSLEngine on
    SSLCertificateFile /etc/apache2/ssl/apache.crt
    SSLCertificateKeyFile /etc/apache2/ssl/apache.key
@@ -38,11 +49,6 @@ sudo bash -c 'cat > /etc/apache2/sites-available/000-default.conf << EOF
    ProxyPassReverse / http://localhost:8080/
 </VirtualHost>
 EOF'
-
-# Check and handle if a proxy.conf already exists
-if [ -e "/etc/apache2/mods-enabled/proxy.conf" ]; then
-    sudo mv /etc/apache2/mods-enabled/proxy.conf /etc/apache2/mods-enabled/proxy.conf.old
-fi
 
 # Setup proxy
 sudo bash -c 'cat > /etc/apache2/mods-enabled/proxy.conf << EOF
@@ -65,10 +71,6 @@ sudo a2enmod proxy
 sudo a2enmod proxy_http
 sudo a2enmod rewrite
 sudo a2enmod headers
-
-# Change HTTP_HOST in Jenkins default configuration
-sudo sed -i 's/#HTTP_HOST=127.0.0.1/HTTP_HOST=127.0.0.1/' /etc/default/jenkins
-sudo sed -i 's/#JENKINS_ARGS="--webroot=\/var\/cache\/\$NAME\/war --httpPort=\$HTTP_PORT"/JENKINS_ARGS="--webroot=\/var\/cache\/\$NAME\/war --httpPort=\$HTTP_PORT --httpListenAddress=$HTTP_HOST"/' /etc/default/jenkins
 
 # Restart both services
 sudo systemctl restart apache2
