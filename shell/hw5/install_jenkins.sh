@@ -3,17 +3,20 @@
 # Update and upgrade system packages
 sudo apt update && sudo apt upgrade -y
 
-# Set your new public hostname here (e.g., the public IP or domain of the new EC2 instance)
-PUBLIC_HOSTNAME="ec2-3-90-62-211.compute-1.amazonaws.com"
-
 # Install Java
 sudo apt install openjdk-11-jdk -y
 
+# Install Jenkins (correct package name)
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt update
+sudo apt install jenkins -y
+
+# Set your new public hostname here (e.g., the public IP or domain of the new EC2 instance)
+PUBLIC_HOSTNAME="ec2-3-90-62-211.compute-1.amazonaws.com"
+
 # Install Apache HTTP
 sudo apt install apache2 -y
-
-# Install Jenkins
-sudo apt-get install jenkins -y
 
 # Setup SSL
 sudo mkdir -p /etc/apache2/ssl
