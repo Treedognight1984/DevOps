@@ -3,17 +3,8 @@
 # Update and upgrade system packages
 sudo apt update && sudo apt upgrade -y
 
-# Install Zenity for graphical dialog boxes
-sudo apt-get install zenity -y
-
-# Prompt for the public hostname
-PUBLIC_HOSTNAME=$(zenity --entry --title="Enter Public Hostname" --text="Please enter your public hostname:")
-
-# Check if the user clicked cancel or if the input is empty
-if [ $? -ne 0 ] || [ -z "$PUBLIC_HOSTNAME" ]; then
-    zenity --error --text="No hostname entered. Exiting script."
-    exit 1
-fi
+# Set your new public hostname here (e.g., the public IP or domain of the new EC2 instance)
+PUBLIC_HOSTNAME="ec2-3-90-62-211.compute-1.amazonaws.com"
 
 # Install Java
 sudo apt install openjdk-11-jdk -y
