@@ -1,0 +1,23 @@
+- name: Install Jenkins Slave
+  hosts: jenkins_slave
+  become: yes
+  tasks:
+    - name: Install Docker
+      shell: |
+        sudo apt update
+        sudo apt install -y docker.io
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+    - name: Run Jenkins Slave Docker Container
+      docker_container:
+        name: jenkins-slave
+        image: jenkins/inbound-agent:latest
+        environment:
+          JENKINS_URL: http://<jenkins_master_private_ip>:8080
+          JENKINS_AGENT_NAME: jenkins-slave
+          JENKINS_SECRET: your_secret
+          JENKINS_AGENT_WORKDIR: /home/jenkins/agent
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        restart_policy: unless-stopped

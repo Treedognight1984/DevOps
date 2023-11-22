@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  apache:
+    image: httpd:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/local/apache2/htdocs/
+    restart: unless-stopped
+
+  wildfly:
+    image: jboss/wildfly:latest
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

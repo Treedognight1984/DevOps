@@ -1,0 +1,22 @@
+- name: Install Jenkins Master
+  hosts: jenkins_master
+  become: yes
+  tasks:
+    - name: Install Docker
+      shell: |
+        sudo apt update
+        sudo apt install -y docker.io
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+    - name: Run Jenkins Docker Container
+      docker_container:
+        name: jenkins-master
+        image: jenkins/jenkins:lts
+        ports:
+          - "8080:8080"
+          - "50000:50000"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+          - jenkins_data:/var/jenkins_home
+        restart_policy: unless-stopped
